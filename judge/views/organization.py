@@ -18,7 +18,6 @@ from django.views.generic.detail import (SingleObjectMixin,
                                          SingleObjectTemplateResponseMixin)
 from reversion import revisions
 
-from chat.models import ChatMessage
 from judge.forms import EditOrganizationForm
 from judge.models import Organization, OrganizationRequest, Profile
 from judge.models.profile import SchoolYear
@@ -124,7 +123,6 @@ class OrganizationHome(OrganizationDetailView):
         context = super(OrganizationHome, self).get_context_data(**kwargs)
         context['title'] = self.object.name
         context['can_edit'] = self.can_edit_organization()
-        context['msg'] = ChatMessage.objects.by_room(self.object.room)[:self.max_message]
         return context
 
 

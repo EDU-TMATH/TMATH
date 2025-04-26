@@ -16,8 +16,8 @@ class JudgeAppConfig(AppConfig):
 
         # import pytz
 
-        from chat.models import ChatParticipation, ChatRoom
-        from judge.models import Organization
+        # from chat.models import ChatParticipation, ChatRoom
+        # from judge.models import Organization
 
         from . import jinja2, signals  # noqa: F401, imported for side effects
 
@@ -36,15 +36,3 @@ class JudgeAppConfig(AppConfig):
         #         data.zipfile = None
         #         data.save()
 
-        try:
-            # tz = pytz.timezone('Asia/Bangkok')
-            # date = tz.localize(datetime(2024, 8, 1))
-            # Problem.objects.filter(approved=False, date__lt=date).update(approved=True)
-            for org in Organization.objects.filter(chat_room=None):
-                room = ChatRoom(organization=org, title=org.name)
-                room.save()
-                for user in org.members.all():
-                    participation = ChatParticipation(user=user, room=room)
-                    participation.save()
-        except DatabaseError:
-            pass

@@ -11,7 +11,6 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 from martor.views import markdown_search_user
 
-from chat.views import NewMessageAjax
 from judge.feed import (AtomBlogFeed, AtomCommentFeed, AtomProblemFeed,
                         BlogFeed, CommentFeed, ProblemFeed)
 from judge.sitemap import (BlogPostSitemap, ContestSitemap, HomePageSitemap,
@@ -132,7 +131,6 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),
     path('accounts/', include(register_patterns)),
     path('', include('social_django.urls')),
-    path('chat/', include('chat.urls')),
     path('manyuser/', user.CreateManyUser.as_view(), name="many_user"),
 
     path('problems/', problem.ProblemList.as_view(), name='problem_list'),
@@ -353,7 +351,6 @@ urlpatterns = [
         path('submission_testcases', submission.SubmissionTestCaseQuery.as_view(), name='submission_testcases_query'),
         path('detect_timezone', widgets.DetectTimezone.as_view(), name='detect_timezone'),
         path('status-table', status.status_table, name='status_table'),
-        path('message_query/<int:id>', NewMessageAjax.as_view(), name="new_messages"),
         path('template', problem.LanguageTemplateAjax.as_view(), name='language_template_ajax'),
 
         # path('user_search2.json', UserSearchSematicView.as_view(), name='user_search_semantic_ajax'),

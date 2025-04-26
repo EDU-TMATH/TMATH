@@ -13,69 +13,8 @@
                 );
             });
         });
-    {#
-        {% if request.user.is_authenticated and request.profile in organization %}
-            function send_message() {
-                const data = {
-                    user                : window.user.id,
-                    msg                 : document.getElementById('message').value,
-                    org                 : {{ organization.pk }},
-                    csrfmiddlewaretoken : $.cookie('csrftoken')
-                }
-                if (data.msg.length == 0) return
-                $.ajax({
-                    type    : 'POST',
-                    url     : '{{ url("chat:send_message") }}',
-                    data    : data,
-                    success : function(response) {
-                        $('#message').val('')
-                    }
-                })
-            }
-            $(function () {
-                var blocked = false, request = false;
-    
-                function update(index) {
-                    if (blocked) {
-                        request = true;
-                        return;
-                    }
-                    request = false;
-                    blocked = true;
-                    $.ajax({
-                        url: '/widgets/message_query/' + index,
-                    }).done(function (data) {
-                        console.log(data)
-                        $('#messages').append(data)
-                        const messages = document.getElementById('description');
-                        messages.scrollTop = messages.scrollHeight;
-                        setTimeout(function () {
-                            blocked = false;
-                            if (request)
-                                update();
-                        }, 500);
-                    }).fail(function (data) {
-                        console.log('Failed to update messages!');
-                    });
-                }
-                event_dispatcher.on('messages_{{ organization.room.id }}', function (message) {
-                    update(message.id)
-                })
-            });
-        {% endif %}
-    #}
     </script>
 {% endblock %}
-
-{% block content_media %}
-<link rel="stylesheet" href="{{ static('semantic/components/comment.min.css') }}">
-<style>
-    .msg p {
-        word-wrap: break-word;
-        word-break: break-word;
-    }
-</style>
-{% endblock content_media %}
 
 {% block body %}
 <div class="flex flex-col lg:flex-row-reverse">
@@ -160,58 +99,8 @@
                 {{ organization.about|markdown('organization-about', MATH_ENGINE)|reference|str|safe }}
             {% endcache %}
         </div>
-        {#
-            {% if request.user.is_authenticated and request.profile in organization %}
-            <div class="flex items-center p-2 mt-10 text-white bg-black rounded-t-md">
-                <div class="flex-1 text-2xl font-bold">{{ organization.room }}</div>
-                <div class="">
-                    <i class="comments icon"></i>
-                </div>
-            </div>
-            <div class="border border-black divide-y divide-black rounded-b-md">
-                <div class="p-2 overflow-x-auto max-h-[50rem]" id="description">
-                    <div class="ui comments max-w-none" id="messages">
-                    {% for message in msg|reverse %}
-                        <div class="comment">
-                            <a href="{{ url('user_page', message.user.user.user.username) }}" class="avatar">
-                                <img loading="lazy" src="{{ gravatar(message.user.user) }}">
-                            </a>
-                            <div class="content">
-                                {{ link_user(message.user.user) }}
-                                <div class="metadata">
-                                    {{ message.publish_on|date(_("N j, Y, g:i a")) }}
-                                </div>
-                                <div class="text">
-                                    {% cache 3600 'message_html' message.id %}
-                                    {{ message.msg|markdown('comment') }}
-                                    {% endcache %}
-                                </div>
-                                <div class="action"></div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                    </div>
-                </div>
-                <form class="flex flex-col p-4 space-y-4" method="post" action="">
-                    <label class="block" for="message">
-                        <span class="text-gray-700">Message</span> 
-                        <textarea name="msg" class="block w-full p-2 mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" id="message" rows="2"></textarea>
-                    </label>
-                    <a class="p-4 font-bold text-white bg-indigo-500 rounded-md cursor-pointer hover:bg-indigo-600" onclick="send_message()">Send</a>
-                </form>
-            </div>
-            {% endif %}
-        #}
     </div>
 </div>
-{#
-    {% if request.user.is_authenticated and request.profile in organization %}
-    <script>
-        const messages = document.getElementById('description');
-        messages.scrollTop = messages.scrollHeight;
-    </script>
-    {% endif %}
-#}
 {% endblock body %}
 
 {% block info_float %}
