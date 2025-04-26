@@ -165,7 +165,6 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
     'judge',
-    # 'emath',
     'django.contrib.flatpages',
     'django.contrib.sessions',
     'django.contrib.messages',
