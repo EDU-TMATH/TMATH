@@ -123,7 +123,6 @@ urlpatterns = [
     # path('', blog.IndexView.as_view()),
     # path('getlog/', getLog.as_view(), name='get_log'),
     path('grappelli/', include('grappelli.urls')),
-    path('typo/', include('typeracer.urls')),
     path('docs/', include('grappelli.urls_docs')),
     path('', blog.PostList.as_view(template_name='home.html', title=_('Home')), kwargs={'page': 1}, name='home'),
     path('500/', exception),

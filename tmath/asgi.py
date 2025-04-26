@@ -17,17 +17,12 @@ from django.urls import path
 
 from judge.consumers import AsyncDetailSubmission as DetailSubmission
 from judge.consumers import AsyncSubmissionConsumer as SubmissionConsumer
-from typeracer.consumers import TypoContestConsumer, TypoRoomConsumer
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tmath.settings')
 
 ws_patterns = [
     path('ws/submissions/', SubmissionConsumer.as_asgi()),
     path('ws/submission/<str:key>/', DetailSubmission.as_asgi()),
-    # path('ws/tickets/', TicketConsumer.as_asgi()),
-    # path('ws/ticket/<int:id>/', DetailTicketConsumer.as_asgi()),
-    path('ws/typeracer/room/<int:pk>/', TypoRoomConsumer.as_asgi()),
-    path('ws/typeracer/contest/<int:pk>/', TypoContestConsumer.as_asgi()),
 ]
 
 application = get_asgi_application()

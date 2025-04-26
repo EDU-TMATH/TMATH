@@ -29,7 +29,6 @@ from judge.models.runtime import Language
 # from judge.models.contest import RATE, NEWBIE
 from judge.ratings import rating_class
 from judge.utils.two_factor import webauthn_decode
-from typeracer.models import TypoResult
 
 # from sortedm2m.fields import SortedManyToManyField
 
@@ -157,8 +156,6 @@ class Profile(models.Model):
                                    help_text=_('User-defined JavaScript for site customization.'))
     current_contest = models.OneToOneField('ContestParticipation', verbose_name=_('current contest'),
                                            null=True, blank=True, related_name='+', on_delete=models.SET_NULL)
-    typo_contest = models.OneToOneField('typeracer.TypoContest', verbose_name=_('current typo contest'),
-                                        null=True, blank=True, related_name='+', on_delete=models.SET_NULL)
     math_engine = models.CharField(verbose_name=_('math engine'), choices=MATH_ENGINES_CHOICES, max_length=4,
                                    default=settings.MATHOID_DEFAULT_TYPE,
                                    help_text=_('the rendering engine used to render math'))
@@ -264,23 +261,6 @@ class Profile(models.Model):
             self.remove_contest()
 
     update_contest.alters_data = True
-
-    def remove_typo(self):
-        self.typo_contest = None
-        self.save()
-
-    remove_typo.alters_data = True
-
-    def update_typo(self):
-        contest = self.typo_contest
-        if contest is not None:
-            if contest.ended:
-                self.remove_typo()
-            result = TypoResult.objects.get(user=self, contest=contest)
-            if result.is_finish:
-                self.remove_typo()
-
-    update_typo.alters_data = True
 
     def check_totp_code(self, code):
         totp = pyotp.TOTP(self.totp_key)
