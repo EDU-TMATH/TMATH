@@ -487,14 +487,6 @@ BRIDGED_JUDGE_ADDRESS = [('localhost', 9999)]
 BRIDGED_JUDGE_PROXIES = None
 BRIDGED_DJANGO_ADDRESS = [('localhost', 9998)]
 BRIDGED_DJANGO_CONNECT = None
-
-# Event Server configuration
-EVENT_DAEMON_USE = False
-EVENT_DAEMON_POST = 'ws://localhost:9997/'
-EVENT_DAEMON_GET = 'ws://localhost:9996/'
-EVENT_DAEMON_POLL = '/channels/'
-EVENT_DAEMON_KEY = None
-EVENT_DAEMON_AMQP_EXCHANGE = 'dmoj-events'
 EVENT_DAEMON_SUBMISSION_KEY = '6Sdmkx^%pk@GsifDfXcwX*Y7LRF%RGT8vmFpSxFBT$fwS7trc8raWfN#CSfQuKApx&$B#Gh2L7p%W!Ww'
 
 # Internationalization

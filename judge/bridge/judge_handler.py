@@ -16,7 +16,6 @@ from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.utils import timezone
 
-# from judge import event_poster as event
 from judge.bridge.base_handler import ZlibPacketHandler, proxy_list
 from judge.caching import finished_submission
 from judge.models import (Judge, Language, LanguageLimit, Problem,

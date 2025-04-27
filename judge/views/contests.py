@@ -40,7 +40,6 @@ from django.views.generic.detail import (BaseDetailView, DetailView,
                                          SingleObjectMixin)
 from reversion import revisions
 
-# from judge import event_poster as event
 from judge.comments import CommentedDetailView
 from judge.forms import ContestCloneForm
 from judge.models import (Contest, ContestMoss, ContestParticipation,

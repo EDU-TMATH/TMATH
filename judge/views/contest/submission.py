@@ -15,7 +15,6 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.views.generic import ListView
 
-# from judge import event_poster as event
 from judge.models import Contest, Language, Problem, Profile, Submission
 from judge.models.contest import ContestProblem
 from judge.utils.infinite_paginator import InfinitePaginationMixin

@@ -25,7 +25,6 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, ListView
 
-# from judge import event_poster as event
 from judge.highlight_code import highlight_code
 from judge.models import (Contest, ContestSubmission, Language, Log, Problem,
                           ProblemTranslation, Profile, Submission)

@@ -46,18 +46,6 @@ def get_profile(request):
     return None
 
 
-# def comet_location(request):
-#     if request.is_secure():
-#         websocket = getattr(settings, 'EVENT_DAEMON_GET_SSL', settings.EVENT_DAEMON_GET)
-#         poll = getattr(settings, 'EVENT_DAEMON_POLL_SSL', settings.EVENT_DAEMON_POLL)
-#     else:
-#         websocket = settings.EVENT_DAEMON_GET
-#         poll = settings.EVENT_DAEMON_POLL
-#     return {'EVENT_DAEMON_LOCATION': websocket,
-#             'EVENT_DAEMON_POLL_LOCATION': poll,
-#             'EVENT_LAST_MSG': event.last()}
-
-
 def __nav_tab(request):
     problem_link = reverse("problem_list")
     user = getattr(request, "user", None)
