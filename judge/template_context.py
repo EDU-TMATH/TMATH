@@ -80,7 +80,7 @@ def __nav_tab(request):
 
 def general_info(request):
     path = request.get_full_path()
-    version = random.randint(1, 1000000000)
+    version = getattr(settings, 'STATIC_VERSION', random.randint(1, 1000000000))
     return {
         'nav_tab': __nav_tab(request),
         'nav_bar': NavigationBar.objects.all(),
