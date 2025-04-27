@@ -1,9 +1,11 @@
 import json
 from functools import partial
+from uuid import UUID
 
 from celery.result import AsyncResult
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseBadRequest, HttpResponseRedirect, JsonResponse
+from django.http import (Http404, HttpResponseBadRequest, HttpResponseRedirect,
+                         JsonResponse)
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -33,9 +35,14 @@ def get_task_status(task_id):
 
 
 def task_status(request, task_id):
+    try:
+        UUID(task_id)
+    except ValueError:
+        raise Http404("Invalid task ID")
     redirect = request.GET.get("redirect")
     if not url_has_allowed_host_and_scheme(
-        redirect, allowed_hosts={request.get_host()},
+        redirect,
+        allowed_hosts={request.get_host()},
     ):
         redirect = None
 
@@ -59,7 +66,8 @@ def task_status(request, task_id):
 def task_status_ajax(request):
     if "id" not in request.GET:
         return HttpResponseBadRequest(
-            'Need to pass GET parameter "id"', content_type="text/plain",
+            'Need to pass GET parameter "id"',
+            content_type="text/plain",
         )
     return JsonResponse(get_task_status(request.GET["id"]))
 
@@ -72,11 +80,17 @@ def demo_task(request, task, message):
 
 
 demo_success = partial(
-    demo_task, task=success, message="Running example task that succeeds...",
+    demo_task,
+    task=success,
+    message="Running example task that succeeds...",
 )
 demo_failure = partial(
-    demo_task, task=failure, message="Running example task that fails...",
+    demo_task,
+    task=failure,
+    message="Running example task that fails...",
 )
 demo_progress = partial(
-    demo_task, task=progress, message="Running example task that waits 10 seconds...",
+    demo_task,
+    task=progress,
+    message="Running example task that waits 10 seconds...",
 )
