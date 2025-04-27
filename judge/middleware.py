@@ -36,7 +36,7 @@ class BlockedIpMiddleware(object):
     def __call__(self, request):
         ip = get_client_ip(request)
         if ip in settings.BLOCKED_IPS or ip.startswith('43.'):
-            return http.HttpResponseForbidden('<h1>Forbidden</h1>')
+            raise HTTPError()
 
         response = self.get_response(request)
         return response

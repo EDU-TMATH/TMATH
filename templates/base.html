@@ -386,10 +386,6 @@
                 <div id="content-body" class="flex-1">{% block body %}{% endblock %}</div>
             </main>
         
-            {% if i18n_config.announcement %}
-                <div id="announcement">{{ i18n_config.announcement|safe }}</div>
-            {% endif %}
-        
             {% block bodyend %}{% endblock %}
         </div>
     </div>
@@ -400,9 +396,6 @@
             <div class="flex items-baseline">
                 <p style="height: 100%">
                 <a style="color: #808080;" href="https://dmoj.ca">proudly powered by <b>DMOJ</b></a>
-                {% if i18n_config.footer %}
-                    {{ i18n_config.footer|safe }} |
-                {% endif %}
                 </p>
             </div>
             <form action="{{ url('set_language') }}" method="post" id="set_language">
