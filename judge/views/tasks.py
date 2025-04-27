@@ -35,7 +35,7 @@ def get_task_status(task_id):
 def task_status(request, task_id):
     redirect = request.GET.get("redirect")
     if not url_has_allowed_host_and_scheme(
-        redirect, allowed_hosts={request.get_host()}
+        redirect, allowed_hosts={request.get_host()},
     ):
         redirect = None
 
@@ -59,7 +59,7 @@ def task_status(request, task_id):
 def task_status_ajax(request):
     if "id" not in request.GET:
         return HttpResponseBadRequest(
-            'Need to pass GET parameter "id"', content_type="text/plain"
+            'Need to pass GET parameter "id"', content_type="text/plain",
         )
     return JsonResponse(get_task_status(request.GET["id"]))
 
@@ -72,11 +72,11 @@ def demo_task(request, task, message):
 
 
 demo_success = partial(
-    demo_task, task=success, message="Running example task that succeeds..."
+    demo_task, task=success, message="Running example task that succeeds...",
 )
 demo_failure = partial(
-    demo_task, task=failure, message="Running example task that fails..."
+    demo_task, task=failure, message="Running example task that fails...",
 )
 demo_progress = partial(
-    demo_task, task=progress, message="Running example task that waits 10 seconds..."
+    demo_task, task=progress, message="Running example task that waits 10 seconds...",
 )

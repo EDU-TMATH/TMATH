@@ -16,6 +16,7 @@ per-file-ignores =
     ./*/__init__.py:F401,F403
     # F405: name comes from import *
     ./judge/management/commands/runmoss.py:F403,F405
+    ./judge/user_translations.py:F824
     # E501: line too long, ignore in migrations
     ./*/migrations/*.py:E501
     # E303: too many blank lines

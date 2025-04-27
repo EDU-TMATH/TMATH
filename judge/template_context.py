@@ -63,7 +63,8 @@ def __nav_tab(request):
     user = getattr(request, "user", None)
     if user and user.is_authenticated and user.profile.current_contest:
         problem_link = reverse(
-            "contest_problem_list", args=[user.profile.current_contest.contest.key]
+            "contest_problem_list",
+            args=[user.profile.current_contest.contest.key],
         )
     return [
         ("problem", problem_link, _("Problems")),
@@ -110,7 +111,7 @@ class MiscConfigDict(dict):
             if self.site is not None:
                 keys = ["%s:%s" % (self.site, key) for key in keys] + keys
             map = dict(
-                MiscConfig.objects.values_list("key", "value").filter(key__in=keys)
+                MiscConfig.objects.values_list("key", "value").filter(key__in=keys),
             )
             for item in keys:
                 if item in map:
