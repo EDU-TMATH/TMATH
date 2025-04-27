@@ -83,7 +83,7 @@ class ShortCircuitMiddleware:
     def __call__(self, request):
         try:
             callback, args, kwargs = resolve(
-                request.path_info, getattr(request, "urlconf", None)
+                request.path_info, getattr(request, "urlconf", None),
             )
         except Resolver404:
             callback, args, kwargs = None, None, None
@@ -116,7 +116,7 @@ class DMOJLoginMiddleware(object):
                 and not request.path.startswith(settings.STATIC_URL)
             ):
                 return HttpResponseRedirect(
-                    change_password_path + "?next=" + urlquote(request.get_full_path())
+                    change_password_path + "?next=" + urlquote(request.get_full_path()),
                 )
         else:
             request.profile = None
@@ -169,7 +169,7 @@ class APIMiddleware(object):
 
         try:
             id, secret = struct.unpack(
-                ">I32s", base64.urlsafe_b64decode(token.group(1))
+                ">I32s", base64.urlsafe_b64decode(token.group(1)),
             )
             request.user = User.objects.get(id=id)
 
@@ -179,7 +179,7 @@ class APIMiddleware(object):
 
             # Token comparison
             digest = hmac.new(
-                force_bytes(settings.SECRET_KEY), msg=secret, digestmod="sha256"
+                force_bytes(settings.SECRET_KEY), msg=secret, digestmod="sha256",
             ).hexdigest()
             if not hmac.compare_digest(digest, request.user.profile.api_token):
                 raise HTTPError()
