@@ -16,6 +16,7 @@ from judge.utils.views import short_circuit_middleware
 
 
 def get_task_status(task_id):
+    # return {'code': 'PROGRESS', 'done': 20, 'total': 100, 'stage': 'Running...'}
     result = AsyncResult(task_id)
     info = result.result
     if result.state == 'PROGRESS':
@@ -29,11 +30,6 @@ def get_task_status(task_id):
 
 
 def task_status(request, task_id):
-    try:
-        UUID(task_id)
-    except ValueError:
-        raise Http404()
-
     redirect = request.GET.get('redirect')
     if not url_has_allowed_host_and_scheme(redirect, allowed_hosts={request.get_host()}):
         redirect = None

@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Task Progress - {{ SITE_LONG_NAME }}</title>
-    <link rel="stylesheet" href="{{ static('task_status.css') }}">
-    <script src="{{ static('libs/jquery-3.4.1.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ static('full_style.css') }}?v={{ version }}">
+    <script src="{{ static('libs/jquery-3.6.0.min.js') }}"></script>
     <script type="text/javascript">
         $(function () {
-            var $jumbotron = $('.jumbotron');
+            var $jumbotron = $('.task-container');
             var task_id = $jumbotron.attr('data-task-id');
             var status = JSON.parse($jumbotron.attr('data-task-status'));
             var redirect = $jumbotron.attr('data-redirect');
@@ -33,8 +33,9 @@
                         $known_bar.attr({
                             'aria-valuenow': status.done,
                             'aria-valuemax': status.total,
-                        }).width(100 * status.done / status.total + '%');
-                        $known_text.text(status.done + ' / ' + status.total);
+                            'style': 'width: ' + (100 * status.done / status.total) + '%'
+                        });
+                        $known_bar.text(status.done + ' / ' + status.total);
                         $known.show();
                         break;
                     case 'WORKING':
@@ -49,7 +50,7 @@
             }
 
             function do_ajax(backoff) {
-                $.get('{{ url('task_status_ajax') }}', {
+                $.get("{{ url('task_status_ajax') }}", {
                     id: task_id
                 }).done(function (data) {
                     show_status(data);
@@ -73,28 +74,37 @@
         });
     </script>
 </head>
-<body>
-<div class="container">
-    <div class="jumbotron" data-task-id="{{ task_id }}" data-task-status="{{ task_status }}"
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="task-container max-w-2xl w-full mx-auto p-6 bg-white rounded-lg shadow-lg" 
+         data-task-id="{{ task_id }}" 
+         data-task-status="{{ task_status }}"
          data-redirect="{{ redirect }}">
-        <img src="{{ static('icons/icon.svg') }}" class="icon" alt="DMOJ Icon">
-        <p class="action">{{ message }}</p>
-        <p class="stage"></p>
+        <div class="flex flex-col items-center space-y-4">
+            <img src="{{ static('icons/icon.svg') }}" class="w-24 h-24" alt="TMATH Icon">
+            <p class="text-xl font-semibold text-gray-800">{{ message }}</p>
+            <p class="stage text-gray-600"></p>
 
-        <div class="progress progress-known">
-            <div class="progress-bar" role="progressbar" aria-valuemin="0"></div>
-            <div class="progress-text"></div>
-        </div>
-        <div class="progress progress-unknown">
-            <div class="progress-bar progress-bar-animated" role="progressbar"></div>
-        </div>
-        <div class="progress progress-complete">
-            <div class="progress-bar" role="progressbar">Completed!</div>
-        </div>
-        <div class="progress progress-failed">
-            <div class="progress-bar" role="progressbar">Failed!</div>
+            <div class="progress-known text-lg w-full bg-gray-200 rounded-full dark:bg-gray-700">
+                <div class="progress-bar h-6 bg-blue-600 text-base font-medium transition-[width] duration-300 text-blue-100 text-center p-1 leading-none rounded-full" role="progressbar"></div>
+            </div>
+
+            <div class="progress w-full hidden">
+                <div class="progress-bar bg-blue-500 h-6 rounded-full" role="progressbar"></div>
+                <div class="progress-text text-sm text-gray-600 mt-2 text-center"></div>
+            </div>
+            
+            <div class="progress progress-unknown w-full hidden">
+                <div class="progress-bar bg-blue-500 h-6 rounded-full animate-pulse" role="progressbar"></div>
+            </div>
+            
+            <div class="progress progress-complete w-full hidden">
+                <div class="progress-bar bg-green-600 text-base dark:bg-green-500 p-1 leading-none h-6 rounded-full text-white text-center font-medium" role="progressbar">Completed!</div>
+            </div>
+            
+            <div class="progress progress-failed w-full text-lg hidden">
+                <div class="progress-bar bg-red-600 text-base dark:bg-red-500 p-1 leading-none h-6 rounded-full text-white text-center font-medium" role="progressbar">Failed!</div>
+            </div>
         </div>
     </div>
-</div>
 </body>
 </html>

@@ -441,7 +441,7 @@ urlpatterns = [
     ])),
 
     path('tasks/', include([
-        path('status/<slug:task_id>', tasks.task_status, name='task_status'),
+        path('status/<uuid:task_id>', tasks.task_status, name='task_status'),
         path('ajax_status', tasks.task_status_ajax, name='task_status_ajax'),
         path('success', tasks.demo_success),
         path('failure', tasks.demo_failure),
