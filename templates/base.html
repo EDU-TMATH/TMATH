@@ -348,23 +348,7 @@
         <clipPath id="rating-clip"><circle cx="8" cy="8" r="7"/></clipPath>
     </defs>
 </svg>
-<div class="absolute top-0 left-0 flex flex-col items-center justify-center w-full min-h-screen preloader">
-    <svg class="ip" viewBox="0 0 256 128" width="256px" height="128px" xmlns="http://www.w3.org/2000/svg">
-		<g>
-            <path d="M 50,100 A 1,1 0 0 1 50,0"/>
-          </g>
-          <g>
-            <path d="M 50,75 A 1,1 0 0 0 50,-25"/>
-          </g>
-          <defs>
-            <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" style="stop-color:#FF56A1;stop-opacity:1" />
-              <stop offset="100%" style="stop-color:#FF9350;stop-opacity:1" />
-            </linearGradient>
-          </defs>
-	</svg>
-</div>
-<div class="flex-1 w-full transition-opacity duration-300 ease-in-out opacity-0 main-content">
+<div class="flex-1 w-full transition-opacity duration-300 ease-in-out main-content">
     {% include 'navbar.html' %}
     <div class="overflow-hidden">
         <div id="page_container" class="px-4 py-4 mx-auto max-w-8xl sm:px-6 md:px-8">
@@ -412,19 +396,6 @@
         </div>
     </div>
 </div>
-<script>
-    window.onload = function () {
-        var preloader = document.querySelector(".preloader");
-        var mainContent = document.querySelector(".main-content");
-        
-        setTimeout(function () {
-            // Ẩn preloader khi tải xong
-            preloader.style.display = "none";
-            // Hiển thị nội dung chính của trang
-            mainContent.classList.toggle('opacity-0');
-        }, 200);
-    };
-</script>
 <script>
     const copyableCells = document.querySelectorAll('.prose table td');
     const copied = document.getElementById('copied');
