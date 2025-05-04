@@ -23,7 +23,7 @@ def get_client_ip(request):
     if x_forwarded_for:
         ip = x_forwarded_for.split(",")[0]
     else:
-        ip = request.META.get("REMOTE_ADDR")
+        ip = request.META.get("HTTP_X_REAL_IP", "")
     return ip
 
 
@@ -33,7 +33,7 @@ class BlockedIpMiddleware(object):
 
     def __call__(self, request):
         ip = get_client_ip(request)
-        if ip in settings.BLOCKED_IPS or ip.startswith("43."):
+        if ip and (ip in settings.BLOCKED_IPS or ip.startswith("43.")):
             raise HTTPError()
 
         response = self.get_response(request)
@@ -83,7 +83,8 @@ class ShortCircuitMiddleware:
     def __call__(self, request):
         try:
             callback, args, kwargs = resolve(
-                request.path_info, getattr(request, "urlconf", None),
+                request.path_info,
+                getattr(request, "urlconf", None),
             )
         except Resolver404:
             callback, args, kwargs = None, None, None
@@ -147,49 +148,4 @@ class ContestMiddleware(object):
         else:
             request.in_contest = False
             request.participation = None
-        return self.get_response(request)
-
-
-class APIMiddleware(object):
-    header_pattern = re.compile("^Bearer ([a-zA-Z0-9_-]{48})$")
-
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        full_token = request.META.get("HTTP_AUTHORIZATION", "")
-        if not full_token:
-            return self.get_response(request)
-
-        token = self.header_pattern.match(full_token)
-        if not token:
-            return HttpResponse("Invalid authorization header", status=400)
-        if request.path.startswith(reverse("admin:index")):
-            return HttpResponse("Admin inaccessible", status=403)
-
-        try:
-            id, secret = struct.unpack(
-                ">I32s", base64.urlsafe_b64decode(token.group(1)),
-            )
-            request.user = User.objects.get(id=id)
-
-            # User hasn't generated a token
-            if not request.user.profile.api_token:
-                raise HTTPError()
-
-            # Token comparison
-            digest = hmac.new(
-                force_bytes(settings.SECRET_KEY), msg=secret, digestmod="sha256",
-            ).hexdigest()
-            if not hmac.compare_digest(digest, request.user.profile.api_token):
-                raise HTTPError()
-
-            request._cached_user = request.user
-            request.csrf_processing_done = True
-            request.session["2fa_passed"] = True
-        except (User.DoesNotExist, HTTPError):
-            response = HttpResponse("Invalid token")
-            response["WWW-Authenticate"] = 'Bearer realm="API"'
-            response.status_code = 401
-            return response
         return self.get_response(request)

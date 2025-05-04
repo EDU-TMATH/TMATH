@@ -74,6 +74,7 @@ class OrganizationList(TitleMixin, ListView):
     context_object_name = 'organizations'
     template_name = 'organization/list.html'
     title = gettext_lazy('Organizations')
+    nav_tag = 'organization'
 
     def _get_queryset(self):
         query = super().get_queryset()
@@ -228,6 +229,7 @@ class OrganizationRequestDetail(LoginRequiredMixin, TitleMixin, DetailView):
     template_name = 'organization/requests/detail.html'
     title = gettext_lazy('Join request detail')
     pk_url_kwarg = 'rpk'
+    nav_tag = 'organization'
 
     def get_object(self, queryset=None):
         object = super(OrganizationRequestDetail, self).get_object(queryset)
@@ -245,6 +247,7 @@ class OrganizationRequestBaseView(LoginRequiredMixin, SingleObjectTemplateRespon
     slug_field = 'key'
     slug_url_kwarg = 'key'
     tab = None
+    nav_tag = 'organization'
 
     def get_object(self, queryset=None):
         organization = super(OrganizationRequestBaseView, self).get_object(queryset)
@@ -256,6 +259,7 @@ class OrganizationRequestBaseView(LoginRequiredMixin, SingleObjectTemplateRespon
         context = super(OrganizationRequestBaseView, self).get_context_data(**kwargs)
         context['title'] = _('Managing join requests for %s') % self.object.name
         context['tab'] = self.tab
+        context['nav_tag'] = self.nav_tag
         return context
 
 
