@@ -243,6 +243,11 @@
                 toggle($('.username-column'));
                 localStorage.setItem('show-usernames', $('.username-column').is(':visible') ? 'true' : 'false');
             });
+
+            $('#hidden-time-checkbox').click(function () {
+                toggle($('.solving-time'));
+                localStorage.setItem('hidden-time', $('.solving-time').is(':visible') ? 'false' : 'true');
+            });
             
             var table = document.querySelector('#users-table')
             $('#compact-checkbox').click(function () {
@@ -259,6 +264,11 @@
             if (localStorage.getItem('show-usernames') == 'true') {
                 toggle($('.username-column'));
                 $('#show-usernames-checkbox').prop('checked', true);
+            }
+
+            if (localStorage.getItem('hidden-time') == 'true') {
+                toggle($('.solving-time'));
+                $('#hidden-time-checkbox').prop('checked', true);
             }
 
             if (localStorage.getItem('compact-row') == 'true') {
