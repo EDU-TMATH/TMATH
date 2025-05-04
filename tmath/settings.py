@@ -10,7 +10,6 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import datetime
 import tempfile
-
 # Build paths inside the project like this: BASE_DIR / ...
 from pathlib import Path
 

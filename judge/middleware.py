@@ -1,19 +1,11 @@
-import base64
-import hmac
 import logging
-import re
-import struct
 from urllib.parse import quote as urlquote
 
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.urls import Resolver404, resolve, reverse
-from django.utils.encoding import force_bytes
 from requests.exceptions import HTTPError
-
-# from typeracer.models import TypoRoom
 
 logger = logging.getLogger("judge.request")
 
