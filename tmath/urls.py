@@ -31,9 +31,9 @@ from judge.views.problem_data import (ProblemDataView, ProblemSubmissionDiff,
                                       problem_data_file, problem_init_view,
                                       problem_testcase_file)
 from judge.views.register import ActivationView, RegistrationView
-from judge.views.select2 import (  # , UserSearchSematicView
+from judge.views.select2 import (
     AssigneeSelect2View, CommentSelect2View, ContestSelect2View,
-    ContestUserSearchSelect2View, OrganizationSelect2View, ProblemSelect2View,
+    ContestUserSearchSelect2View, OrganizationSelect2View, ProblemAuthorSelect2View, ProblemSelect2View,
     TicketUserSelect2View, UserSearchSelect2View, UserSelect2View)
 from judge.views.widgets import martor_image_uploader
 
@@ -134,11 +134,11 @@ urlpatterns = [
 
     path('problems/', problem.ProblemList.as_view(), name='problem_list'),
     path('problems/random/', problem.RandomProblem.as_view(), name='problem_random'),
-    path('problems/new/', problem.ProblemNew.as_view(), name='problem_new'),
+    path('problems/create/', problem.ProblemCreate.as_view(), name='problem_create'),
     # path('problems/upload/', problem.ProblemUploadView.as_view(), name='problem_upload'),
 
     path('problem/<slug:problem>', include([
-        path('/update', problem.ProblemEdit.as_view(), name='problem_edit'),
+        path('/update', problem.ProblemUpdate.as_view(), name='problem_update'),
         path('', problem.ProblemDetail.as_view(), name='problem_detail'),
         path('/ps', problem.PublicSolutionCreateView.as_view(), name='create_public_solution'),
         path('/listps', problem.PublicSolutionListView.as_view(), name='public_solution'),
@@ -354,6 +354,7 @@ urlpatterns = [
 
         # path('user_search2.json', UserSearchSematicView.as_view(), name='user_search_semantic_ajax'),
         path('select2/', include([
+            path('problem_author', ProblemAuthorSelect2View.as_view(), name='problem_author_select2_ajax'),
             path('user_search', UserSearchSelect2View.as_view(), name='user_search_select2_ajax'),
             path('contest_users/<slug:contest>', ContestUserSearchSelect2View.as_view(),
                  name='contest_user_search_select2_ajax'),

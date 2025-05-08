@@ -36,6 +36,7 @@ def get_resource(request):
         "DMOJ_SCHEME": scheme,
         # 'DMOJ_CANONICAL': settings.DMOJ_CANONICAL,
         # 'CDN_SERVER' : settings.CDN_SERVER,
+        "DEBUG": settings.DEBUG,
     }
 
 

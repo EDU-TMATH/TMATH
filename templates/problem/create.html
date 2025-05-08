@@ -1,468 +1,411 @@
 {% extends "common-content.html" %}
 
 {% block media %}
-{{ form.media.css }}
-<link rel="stylesheet" type="text/css" href="{{ static('admin/css/forms.css') }}">
-<style>
-.help {
-    color: #999 !important;
-    font-size: 12px;
-}
-.help:before {
-    font-family: FontAwesome;
-    content: "\f05a";
-}
-select {
-    border-radius: 5px;
-    height: 25px;
-    width: 25%;
-    font-size: 14px;
-}
-fieldset {
-    width: 100%;
-}
-.ui.fluid.dropdown {
-    width: unset !important;
-}
-.hidden {
-    display: none !important;
-}
+<link href="https://cdn.jsdelivr.net/npm/ace-builds@1.41.0/css/ace.min.css" rel="stylesheet">
+{% if DEBUG %}
+<style type="text/tailwindcss">
+    body[class*="tmath"] .select2-container {
+        @apply !w-full text-sm;
+    }
+
+    body[class*="tmath"] .select2-container--default .select2-selection--multiple {
+        @apply bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600;
+    }
+
+    body[class*="tmath"] .select2-container,
+    body[class*="tmath"] .select2-selection {
+        @apply rounded-lg;
+    }
+
+    body[class*="tmath"] .select2-container .select2-selection--multiple .select2-selection__rendered {
+        @apply py-0 px-2
+    }
+
+    body[class*="tmath"] .select2-search__field {
+        @apply !p-2.5 -ml-2 !mt-0 dark:text-white text-sm;
+    }
+
+    body[class*="tmath"] .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        @apply bg-gray-200 dark:!bg-gray-600 dark:text-white px-2 py-1 text-sm;
+    }
+
+    .inactive {
+        @apply border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300;
+    }
+
+    .active {
+        @apply text-blue-600 border-blue-600 dark:text-blue-500 dark:border-blue-500 [&>*]:text-blue-600 dark:[&>*]:text-blue-500
+    }
 </style>
+{% endif %}
 {% endblock %}
 
 {% block js_media %}
-<script src="{{ static('admin/js/jquery.init.js') }}"></script>
-{{ form.media.js }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/ace.js"></script>
+<script>
+    $(function () {
+        $('#{{ form.authors.id_for_label }}').select2({
+            placeholder: "{{ _('Type username authors...') }}",
+            ajax: {
+                url: "{{ url('problem_author_select2_ajax') }}"
+            },
+            minimumInputLength: 1,
+            multiple: 'multiple'
+        });
+        $('#{{ form.types.id_for_label }}').select2({
+            placeholder: "{{ _('Type type problem...') }}",
+            minimumInputLength: 1,
+            multiple: 'multiple'
+        });
+        $('#{{ form.organizations.id_for_label }}').select2({
+            placeholder: "{{ _('Type organization...') }}",
+            minimumInputLength: 1,
+            multiple: 'multiple'
+        });
+
+        const editor = ace.edit("{{ form.description.id_for_label }}_ace");
+        const description_input = document.getElementById("{{ form.description.id_for_label }}");
+        editor.setTheme("ace/theme/twilight");
+        editor.session.setMode("ace/mode/markdown");
+        editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            enableSnippets: true,
+            enableEmmet: true,
+            minLines: 30,
+            maxLines: 100,
+            wrap: true
+        });
+        editor.setValue(description_input.value, -1);
+        description_input.classList.add("hidden");
+        document.querySelector("form").addEventListener("submit", function () {
+            description_input.value = editor.getValue();
+        });
+
+        // Preview 
+        document.getElementById("description_preview").addEventListener("click", function () {
+            this.classList.add("active");
+            this.classList.remove("inactive");
+            document.getElementById("description_editor").classList.remove("active");
+            document.getElementById("description_editor").classList.add("inactive");
+            let content = editor.getValue();
+            // Convert markdown to html
+            let preview_url = description_input.getAttribute("data-preview-url");
+            let data = {
+                content: content,
+            };
+            $.ajax({
+                url: preview_url,
+                type: "POST",
+                data: data,
+                success: function(html) {
+                    let preview_div = document.getElementById("{{ form.description.id_for_label }}_preview");
+                    preview_div.innerHTML = html;
+                    let config = {
+                        delimiters: [
+                            {left: "$$", right: "$$", display: true},
+                            {left: "$", right: "$", display: false},
+                            {left: "\\(", right: "\\)", display: false},
+                            {left: "\\[", right: "\\]", display: true}
+                        ],
+                        throwOnError: false
+                    };
+                    preview_div.querySelectorAll(".arithmatex").forEach(function(element) {
+                        renderMathInElement(element, config);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error:", error);
+                }
+            });
+            document.getElementById("{{ form.description.id_for_label }}_ace").classList.add("hidden");
+            document.getElementById("{{ form.description.id_for_label }}_preview").classList.remove("hidden");
+        });
+
+        // Editor
+        document.getElementById("description_editor").addEventListener("click", function () {
+            this.classList.add("active");
+            this.classList.remove("inactive");
+            document.getElementById("description_preview").classList.remove("active");
+            document.getElementById("description_preview").classList.add("inactive");
+            document.getElementById("{{ form.description.id_for_label }}_preview").classList.add("hidden");
+            document.getElementById("{{ form.description.id_for_label }}_ace").classList.remove("hidden");
+        });
+    });
+</script>
 {% endblock %}
 
 {% block body %}
-<div class="ui unstackable grid">
-    <div class="row">
-        <div class="column">
-            <form action="" method="post" class="ui form segment">
-                {% csrf_token %}
-                {% if form.non_field_errors() %}
-                {% for error in form.non_field_errors() %}
-                    <div class="ui negative message">
-                    <i class="close icon"></i>
-                    {{ error }}
-                    </div>
-                {% endfor %}
-                {% endif %}
-                <div class="ui one column grid">
-                    <div class="row">
-                        <fieldset class="column">
-                            <div class="equal width fields">
-                                <div class="required field">
-                                    <label for="{{ form.code.id_for_label }}">{{ form.code.label }}</label>
-                                    {{ form.code }}
-                                    {% if form.code.help_text %}
-                                        <div class="help" style="margin-left: 0px">
-                                            {{ form.code.help_text }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="required field">
-                                    <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
-                                    {{ form.name }}
-                                    {% if form.name.help_text %}
-                                        <div class="help" style="margin-left: 0px">
-                                            {{ form.name.help_text }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="required field">
-                                    <label>{{ form.authors.label }}</label>
-                                    {{ form.authors }}
-                                    {% if form.authors.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                            {{ form.authors.help_text }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="field">
-                                    <label>{{ form.curators.label }}</label>
-                                    {{ form.curators }}
-                                    {% if form.curators.help_text %}
-                                        <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                            {{ form.curators.help_text }}
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="field">
-                                    <label>{{ form.testers.label }}</label>
-                                    {{ form.testers }}
-                                    {% if form.testers.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                        {{ form.testers.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                        </fieldset>
-                    </div>
-                    <div class="row">
-                        <fieldset class="column">
-                            <legend class="ui header">{{ _('Settings') }}</legend>
-                            <div class="equal width fields">
-                                <div class="field">
-                                    <div class="ui checkbox">
-                                        {{ form.is_public }}
-                                        <label for="{{ form.is_public.id_for_label }}">{{ form.is_public.label }}</label>
-                                    </div>
-                                    {% if form.is_public.help_text %}
-                                        <div class="help" style="margin-left: 0px">
-                                            {{ form.is_public.help_text }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="field">
-                                    <div class="ui checkbox">
-                                        {{ form.is_manually_managed }}
-                                        <label for="{{ form.is_manually_managed.id_for_label }}">{{ form.is_manually_managed.label }}</label>
-                                    </div>
-                                    {% if form.is_manually_managed.help_text %}
-                                        <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                            {{ form.is_manually_managed.help_text }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="field">
-                                    <label>{{ form.banned_users.label }}</label>
-                                    {{ form.banned_users }}
-                                    {% if form.banned_users.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                        {{ form.banned_users.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="field">
-                                    <div class="ui checkbox">
-                                        {{ form.is_organization_private }}
-                                        <label for="{{ form.is_organization_private.id_for_label }}">{{ form.is_organization_private.label }}</label>
-                                    </div>
-                                    {% if form.is_organization_private.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                            {{ form.is_organization_private.help_text }}
-                                        </div>
-                                        {% endif %}
-                                </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="field">
-                                    <label for="{{ form.organizations.id_for_label }}">{{ form.organizations.label }}</label>
-                                    {{ form.organizations }}
-                                    {% if form.organizations.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                            {{ form.organizations.help_text }}
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="field">
-                                    {{ form.submission_source_visibility_mode.label_tag() }}
-                                    {{ form.submission_source_visibility_mode }}
-                                    {% if form.submission_source_visibility_mode.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                        {{ form.submission_source_visibility_mode.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="field">
-                                    {{ form.testcase_visibility_mode.label_tag() }}
-                                    {{ form.testcase_visibility_mode }}
-                                    {% if form.testcase_visibility_mode.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                        {{ form.testcase_visibility_mode.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </fieldset>
-                    </div>
-                    <div class="row">
-                        <fieldset class="column">
-                            <legend class="ui header">{{ _('Description') }}</legend>
-                            <div class="equal width fields">
-                                <div class="field">
-                                    <div class="ui checkbox">
-                                        {{ form.is_full_markup }}
-                                        <label for="{{ form.is_full_markup.id_for_label }}">{{ form.is_full_markup.label }}</label>
-                                    </div>
-                                    {% if form.is_full_markup.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                        {{ form.is_full_markup.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="required field">
-                                    {{ form.description.label_tag() }}
-                                    {{ form.description }}
-                                </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="field">
-                                    {{ form.license.label_tag() }}
-                                    {{ form.license }}
-                                    {% if form.license.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                        {{ form.license.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="field">
-                                    {{ form.og_image.label_tag() }}
-                                    {{ form.og_image }}
-                                    {% if form.og_image.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                        {{ form.og_image.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="field">
-                                    {{ form.summary.label_tag() }}
-                                    {{ form.summary }}
-                                    {% if form.summary.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                        {{ form.summary.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </fieldset>
-                    </div>
-                    <div class="row">
-                        <fieldset class="column">
-                            <legend class="ui header">{{ _('Classify') }}</legend>
-                            <div class="equal width fields">
-                                <div class="required field">
-                                    {{ form.types.label_tag() }}
-                                    {{ form.types }}
-                                    {% if form.types.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                        {{ form.types.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="required field">
-                                    {{ form.group.label_tag() }}
-                                    {{ form.group }}
-                                    {% if form.group.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                        {{ form.group.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="required field">
-                                    {{ form.classes.label_tag() }}
-                                    {{ form.classes }}
-                                    {% if form.classes.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                        {{ form.classes.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </fieldset>
-                    </div>
-                    <div class="row">
-                        <fieldset class="column">
-                            <legend class="ui header">{{ _('Limit') }}</legend>
-                            <div class="equal width two fields">
-                                <div class="required field">
-                                    {{ form.time_limit.label_tag() }}
-                                    {{ form.time_limit }}
-                                    {% if form.time_limit.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                        {{ form.time_limit.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                <div class="required field">
-                                    {{ form.memory_limit.label_tag() }}
-                                    {{ form.memory_limit }}
-                                    {% if form.memory_limit.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                        {{ form.memory_limit.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>                    
-                            </div>
-                            <div class="equal width three fields">
-                                <div class="required field">
-                                    {{ form.points.label_tag() }}
-                                    {{ form.points }}
-                                    {% if form.points.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                        {{ form.points.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                <div class="field">
-                                    <div class="ui checkbox">
-                                        {{ form.partial }}
-                                        <label for="{{ form.partial.id_for_label }}">{{ form.partial.label }}</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="equal width fields">
-                                <div class="required field">
-                                    <label for="{{ form.allowed_languages.id_for_label }}">
-                                        {{ form.allowed_languages.label }}
-                                        
-                                    </label>
-                                    {{ form.allowed_languages }}
-                                    {% if form.allowed_languages.help_text %}
-                                    <div class="help" style="margin-left: 0px; margin-top: 5px;">
-                                        {{ form.allowed_languages.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="ui checkbox">
-                                <input type="checkbox" id="checkall" class="checkall">
-                                <label for="checkall">{{ _('Check all') }}</label>
-                            </div>
-                            <script type="text/javascript">
-                                django.jQuery(function ($) {
-                                    var original = $('div#id_allowed_languages');
-                                    $('.checkall').click(function () {
-                                        original.find(':checkbox').prop('checked', this.checked);
-                                    });
-                                });
-                            </script>
-                        </fieldset>
-                    </div>
-                    <div class="row">
-                        <fieldset class="column">
-                            <legend class="ui header">{{ _('Language limit') }}</legend>
-                            
-                            {{ languagelimitform.management_form }}
-                            <div id="language_limits">
-                                {% for language_form in languagelimitform %}
-                                <div class="equal width four inline fields language_limits" id="language_limits_form_{{ loop.index0 }}">
-                                    {% for hidden in language_form.hidden_fields() %}
-                                        {{ hidden }}
-                                    {% endfor %}
-                                    <div class="inline field">
-                                        <label for="{{ language_form.language.id_for_label }}">{{ language_form.language.label }}</label>
-                                        {{ language_form.language }}
-                                    </div>
-                                    <div class="inline field">
-                                        <label for="{{ language_form.time_limit.id_for_label }}">{{ language_form.time_limit.label }}</label>
-                                        {{ language_form.time_limit }}
-                                    </div>
-                                    <div class="inline field">
-                                        <label for="{{ language_form.memory_limit.id_for_label }}">{{ language_form.memory_limit.label }}</label>
-                                        {{ language_form.memory_limit }}
-                                    </div>
-                                    {% if languagelimitform.can_delete %}
-                                    <div class="inline field">
-                                        <div class="ui checkbox">
-                                            {{ language_form.DELETE }}
-                                            <label for="{{language_form.DELETE.id_for_label }}">{{ language_form.DELETE.label }}</label>
-                                        </div>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                {% endfor %}
-                            </div>
-                            {% with language_form=languagelimitform.empty_form %}
-                            <div class="equal width four inline fields hidden" id="language_limits_empty_form">
-                                {% for hidden in language_form.hidden_fields() %}
-                                    {{ hidden }}
-                                {% endfor %}
-                                <div class="inline field">
-                                    <label for="{{ language_form.language.id_for_label }}">{{ language_form.language.label }}</label>
-                                    {{ language_form.language }}
-                                </div>
-                                <div class="inline field">
-                                    <label for="{{ language_form.time_limit.id_for_label }}">{{ language_form.time_limit.label }}</label>
-                                    {{ language_form.time_limit }}
-                                </div>
-                                <div class="inline field">
-                                    <label for="{{ language_form.memory_limit.id_for_label }}">{{ language_form.memory_limit.label }}</label>
-                                    {{ language_form.memory_limit }}
-                                </div>
-                                {% if languagelimitform.can_delete %}
-                                <div class="inline field">
-                                    <div class="ui checkbox">
-                                        {{ language_form.DELETE }}
-                                        <label for="{{language_form.DELETE.id_for_label}}">{{ language_form.DELETE.label }}</label>
-                                    </div>
-                                </div>
-                                {% endif %}
-                            </div>
-                            {% endwith %}
-                            <a class="ui button" id="add_language_limits" onclick="add_new_form('language_limits')">{{ _('Add more') }}</a>
-                        </fieldset>
-                    </div>
-                    <div class="row">
-                        <div class="column">
-                            <button class="fluid ui primary button" style="margin-top: 10px">Save</button>
-                        </div>
-                    </div>
+<form action="" method="post" class="max-w-screen-xl mx-auto p-4 mt-4 border bg-white rounded-lg {% if form.errors %}border-red-500 dark:border-red-700{% else %}border-gray-300 dark:border-gray-600{% endif %} dark:bg-gray-800">
+    {% csrf_token %}
+    {{ form.errors }}
+    {% if form.non_field_errors() %}
+    {% for error in form.non_field_errors() %}
+    <div class="flex flex-col text-red-500">
+        <i class="close icon"></i>
+        {{ error }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    <div class="grid md:grid-cols-2 gap-2 md:gap-6">
+        <div class="w-full">
+            <label for="{{ form.code.id_for_label }}" class="block mb-2 text-sm font-bold text-gray-900 dark:text-white">{{ form.code.label }}<sup class="text-red-500">(required)</sup></label>
+            <input type="text" name="{{ form.code.name }}" {% if form.code.value() %} value="{{ form.code.value() }}" {% endif %} id="{{ form.code.id_for_label }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="{{ _('Type problem code') }}" required="">
+            {% if form.code.help_text %}
+                <div class="mt-2 text-xs text-gray-500 dark:text-gray-300">
+                    {{ form.code.help_text }}
                 </div>
-            </form>
+            {% endif %}
+        </div>
+        <div class="w-full">
+            <label for="{{ form.name.id_for_label }}" class="block mb-2 text-sm font-bold text-gray-900 dark:text-white">{{ form.name.label }}<sup class="text-red-500">(required)</sup></label>
+            <input type="text" name="{{ form.name.name }}" {% if form.name.value() %} value="{{ form.name.value() }}" {% endif %} id="{{ form.name.id_for_label }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="{{ _('Type problem name') }}" required="">
+            {% if form.name.help_text %}
+                <div class="mt-2 text-xs text-gray-500 dark:text-gray-300">
+                    {{ form.name.help_text }}
+                </div>
+            {% endif %}
+        </div>
+        <div class="sm:col-span-2">
+            <label for="{{ form.authors.id_for_label }}" class="block mb-2 text-sm font-bold {% if form.authors.errors %} text-red-700 dark:text-red-500 {% else %} text-gray-900 dark:text-white {% endif %}">{{ form.authors.label }}<sup class="text-red-500">(required)</sup></label>
+            {{ form.authors }}
+            {% if form.authors.help_text %}
+            <div class="mt-2 text-xs text-gray-500 dark:text-gray-300">
+                {{ form.authors.help_text }}
+            </div>
+            {% endif %}
+            {% if form.authors.errors %}
+            <div class="mt-2 text-xs text-red-700 dark:text-red-500">
+                {{ form.authors.errors }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="sm:col-span-2 text-lg font-bold border-b border-gray-200 pb-2 dark:text-white">
+            {{ _('Settings') }}
+        </div>
+        <div class="flex">
+            <div class="flex items-center h-5">
+                <input id="{{ form.is_public.id_for_label }}" {% if form.is_public.value() %} checked {% endif %} name="{{ form.is_public.name }}" aria-describedby="{{ form.is_public.id_for_label }}-helper-checkbox-text" type="checkbox" value="" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div class="ms-2 text-sm">
+                <label for="{{ form.is_public.id_for_label }}" class="font-bold text-gray-900 dark:text-gray-300">{{ form.is_public.label }}</label>
+                {% if form.is_public.help_text %}
+                <p id="{{ form.is_public.id_for_label }}-helper-checkbox-text" class="text-xs font-normal text-gray-500 dark:text-gray-300">
+                    {{ form.is_public.help_text }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="flex">
+            <div class="flex items-center h-5">
+                <input id="{{ form.is_organization_private.id_for_label }}" {% if form.is_organization_private.value() %} checked {% endif %} name="{{ form.is_organization_private.name }}" aria-describedby="{{ form.is_organization_private.id_for_label }}-helper-checkbox-text" type="checkbox" value="" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div class="ms-2 text-sm">
+                <label for="{{ form.is_organization_private.id_for_label }}" class="font-bold text-gray-900 dark:text-gray-300">{{ form.is_organization_private.label }}</label>
+                {% if form.is_organization_private.help_text %}
+                <p id="{{ form.is_organization_private.id_for_label }}-helper-checkbox-text" class="text-xs font-normal text-gray-500 dark:text-gray-300">
+                    {{ form.is_organization_private.help_text }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="sm:col-span-2">
+            <label for="{{ form.organizations.id_for_label }}" class="block mb-2 text-sm font-bold text-gray-900 dark:text-white">{{ form.organizations.label }}</label>
+            {{ form.organizations }}
+            {% if form.organizations.help_text %}
+            <div class="mt-2 text-xs text-gray-500 dark:text-gray-300">
+                {{ form.organizations.help_text }}
+            </div>
+            {% endif %}
+        </div>
+        <div>
+            <label for="{{ form.submission_source_visibility_mode.id_for_label }}" class="block mb-2 text-sm font-bold text-gray-900 dark:text-white">{{ form.submission_source_visibility_mode.label }}</label>
+            <select id="{{ form.submission_source_visibility_mode.id_for_label }}" name="{{ form.submission_source_visibility_mode.name }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-403 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                {% for value, label in form.submission_source_visibility_mode.field.choices %}
+                <option value="{{ value }}" {% if form.submission_source_visibility_mode.value() == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            {% if form.submission_source_visibility_mode.help_text %}
+            <div class="mt-2 text-xs text-gray-500 dark:text-gray-300">
+                {{ form.submission_source_visibility_mode.help_text }}
+            </div>
+            {% endif %}
+        </div>
+        <div>
+            <label for="{{ form.testcase_visibility_mode.id_for_label }}" class="block mb-2 text-sm font-bold text-gray-900 dark:text-white">{{ form.testcase_visibility_mode.label }}</label>
+            <select id="{{ form.testcase_visibility_mode.id_for_label }}" name="{{ form.testcase_visibility_mode.name }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-403 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                {% for value, label in form.testcase_visibility_mode.field.choices %}
+                <option value="{{ value }}" {% if form.testcase_visibility_mode.value() == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            {% if form.testcase_visibility_mode.help_text %}
+            <div class="mt-2 text-xs text-gray-500 dark:text-gray-300">
+                {{ form.testcase_visibility_mode.help_text }}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="sm:col-span-2 text-lg font-bold border-b border-gray-200 pb-2 dark:text-white">
+            {{ _('Description') }}
+        </div>
+        <div class="sm:col-span-2">
+            <label for="{{ form.description.id_for_label }}" class="block mb-2 text-sm font-bold {% if form.description.errors %} text-red-700 dark:text-red-500 {% else %} text-gray-900 dark:text-white {% endif %}">{{ form.description.label }}<sup class="text-red-500">(required)</sup></label>
+            <div class="border-b border-gray-200 dark:border-gray-700">
+                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
+                    <li class="me-2">
+                        <div id="description_editor" class="inline-flex cursor-pointer items-center justify-center p-4 border-b-2 rounded-t-lg active group" aria-current="page">
+                            <svg class="w-4 h-4 me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z"/>
+                              </svg>
+                            {{ _('Editor') }}
+                        </div>
+                    </li>
+                    <li class="me-2">
+                        <div id="description_preview" class="inline-flex cursor-pointer items-center justify-center p-4 border-b-2 rounded-t-lg inactive group">
+                            <svg class="w-4 h-4 me-2 text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M4.998 7.78C6.729 6.345 9.198 5 12 5c2.802 0 5.27 1.345 7.002 2.78a12.713 12.713 0 0 1 2.096 2.183c.253.344.465.682.618.997.14.286.284.658.284 1.04s-.145.754-.284 1.04a6.6 6.6 0 0 1-.618.997 12.712 12.712 0 0 1-2.096 2.183C17.271 17.655 14.802 19 12 19c-2.802 0-5.27-1.345-7.002-2.78a12.712 12.712 0 0 1-2.096-2.183 6.6 6.6 0 0 1-.618-.997C2.144 12.754 2 12.382 2 12s.145-.754.284-1.04c.153-.315.365-.653.618-.997A12.714 12.714 0 0 1 4.998 7.78ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd"/>
+                              </svg>
+                            {{ _('Preview') }}
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div id="{{ form.description.id_for_label }}_ace" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-b-lg border border-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"></div>
+            <div id="{{ form.description.id_for_label }}_preview" class="block min-h-[500px] prose hidden p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-b-lg border border-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"></div>
+            {{ form.description }}
+            {% if form.description.errors %}
+            <div class="mt-2 text-xs text-red-700 dark:text-red-500">
+                {{ form.description.errors }}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="sm:col-span-2 text-lg font-bold border-b border-gray-200 pb-2 dark:text-white">
+            {{ _('Classify') }}
+        </div>
+        <div class="sm:col-span-2">
+            <label for="{{ form.types.id_for_label }}" class="block mb-2 text-sm font-bold text-gray-900 dark:text-white">{{ form.types.label }}<sup class="text-red-500">(required)</sup></label>
+            {{ form.types }}
+            {% if form.types.help_text %}
+            <div class="mt-2 text-xs text-gray-500 dark:text-gray-300">
+                {{ form.types.help_text }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="">
+            <label for="{{ form.classes.id_for_label }}" class="block mb-2 text-sm font-bold {% if form.classes.errors %} text-red-700 dark:text-red-500 {% else %} text-gray-900 dark:text-white {% endif %}">{{ form.classes.label }}<sup class="text-red-500">(required)</sup></label>
+            <select id="{{ form.classes.id_for_label }}" name="{{ form.classes.name }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-403 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                {% for value, label in form.classes.field.choices %}
+                <option value="{{ value }}" {% if form.classes.value() == value.value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            {% if form.classes.help_text %}
+            <div class="mt-2 text-xs text-gray-500 dark:text-gray-300">
+                {{ form.classes.help_text }}
+            </div>
+            {% endif %}
+            {% if form.classes.errors %}
+            <div class="mt-2 text-xs text-red-700 dark:text-red-500">
+                {{ form.classes.errors }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="">
+            <label for="{{ form.group.id_for_label }}" class="block mb-2 text-sm font-bold {% if form.group.errors %} text-red-700 dark:text-red-500 {% else %} text-gray-900 dark:text-white {% endif %}">{{ form.group.label }}<sup class="text-red-500">(required)</sup></label>
+            <select id="{{ form.group.id_for_label }}" name="{{ form.group.name }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-403 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                {% for value, label in form.group.field.choices %}
+                <option value="{{ value }}" {% if form.group.value() == value.value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            {% if form.group.help_text %}
+            <div class="mt-2 text-xs text-gray-500 dark:text-gray-300">
+                {{ form.group.help_text }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="sm:col-span-2 text-lg font-bold border-b border-gray-200 pb-2 dark:text-white">
+            {{ _('Limits') }}
+        </div>
+        <div>
+            <label for="{{ form.points.id_for_label }}" class="block mb-2 text-sm font-bold text-gray-900 dark:text-white">{{ form.points.label }}<sup class="text-red-500">(required)</sup></label>
+            <input type="number" name="{{ form.points.name }}" {% if form.points.value() %} value="{{ form.points.value() }}" {% endif %} id="{{ form.points.id_for_label }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="100" required="">
+            {% if form.points.help_text %}
+            <div class="mt-2 text-xs text-gray-500 dark:text-gray-300">
+                {{ form.points.help_text }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="flex">
+            <div class="flex items-center h-5">
+                <input id="{{ form.partial.id_for_label }}" {% if form.partial.value() %} checked {% endif %} name="{{ form.partial.name }}" aria-describedby="{{ form.partial.id_for_label }}-helper-checkbox-text" type="checkbox" value="" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div class="ms-2 text-sm">
+                <label for="{{ form.partial.id_for_label }}" class="font-bold text-gray-900 dark:text-gray-300">{{ form.partial.label }}</label>
+                {% if form.partial.help_text %}
+                <p id="{{ form.partial.id_for_label }}-helper-checkbox-text" class="text-xs font-normal text-gray-500 dark:text-gray-300">
+                    {{ form.partial.help_text }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <label for="{{ form.time_limit.id_for_label }}" class="block mb-2 text-sm font-bold text-gray-900 dark:text-white">{{ form.time_limit.label }}<sup class="text-red-500">(required)</sup></label>
+            <input type="number" name="{{ form.time_limit.name }}" {% if form.time_limit.value() %} value="{{ form.time_limit.value() }}" {% endif %} id="{{ form.time_limit.id_for_label }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="1.0" required="">
+            {% if form.time_limit.help_text %}
+            <div class="mt-2 text-xs text-gray-500 dark:text-gray-300">
+                {{ form.time_limit.help_text }}
+            </div>
+            {% endif %}
+        </div>
+        <div>
+            <label for="{{ form.memory_limit.id_for_label }}" class="block mb-2 text-sm font-bold text-gray-900 dark:text-white">{{ form.memory_limit.label }}<sup class="text-red-500">(required)</sup></label>
+            <input type="number" name="{{ form.memory_limit.name }}" {% if form.memory_limit.value() %} value="{{ form.memory_limit.value() }}" {% endif %} id="{{ form.memory_limit.id_for_label }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="256000" required="">
+            {% if form.memory_limit.help_text %}
+            <div class="mt-2 text-xs text-gray-500 dark:text-gray-300">
+                {{ form.memory_limit.help_text }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="sm:col-span-2">
+            <label class="block mb-2 text-sm font-bold {% if form.allowed_languages.errors %} text-red-700 dark:text-red-500 {% else %} text-gray-900 dark:text-white {% endif %}">{{ form.allowed_languages.label }}<sup class="text-red-500">(required)</sup></label>
+            <div id="allowed_languages_list" class="grid grid-cols-3 md:grid-cols-6 gap-2">
+                {% set raw_allowed_languages = form.allowed_languages.value() or [] %}
+                {% set allowed_languages = raw_allowed_languages | map('string') | list %}
+                {% for language in form.allowed_languages %}
+                <div class="flex items-center h-5">
+                    <input id="{{ language.id_for_label }}" name="{{ form.allowed_languages.name }}" type="checkbox" value="{{ language.data.value }}" {% if allowed_languages and language.data.value|str in allowed_languages %}checked{% endif %}
+                           class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                    <label for="{{ language.id_for_label }}" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">{{ language.choice_label }}</label>
+                </div>
+                {% endfor %}
+            </div>
+            {% if form.allowed_languages.help_text %}
+            <div class="mt-2 text-xs text-gray-500 dark:text-gray-300">
+                {{ form.allowed_languages.help_text }}
+            </div>
+            {% endif %}
+            {% if form.allowed_languages.errors %}
+            <div class="mt-2 text-xs text-red-700 dark:text-red-500">
+                {{ form.allowed_languages.errors }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="flex items-center sm:col-span-2">
+            <input id="allowed_languages_checkall" type="checkbox" value="" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+            <label for="allowed_languages_checkall" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">{{ _('Check all') }}</label>
+            <script>
+                var original = document.getElementById('allowed_languages_list');
+                var checkall = document.getElementById('allowed_languages_checkall');
+                checkall.addEventListener('click', function() {
+                    original.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox) {
+                        checkbox.checked = checkall.checked;
+                    });
+                });
+            </script>
         </div>
     </div>
-</div>
+    <button type="submit" class="inline-flex cursor-pointer items-center px-5 py-2.5 mt-4 sm:mt-6 text-sm font-medium text-center text-white bg-primary-700 rounded-lg focus:ring-4 focus:ring-primary-200 dark:focus:ring-primary-900 hover:bg-primary-800">
+        Save
+    </button>
+</form>
 {% endblock %}
-
-{% block bodyend %}
-{{super() }}
-<script>
-    $(".ui.dropdown").dropdown();
-    function add_new_form(form, event) {
-        if (event) {
-            event.preventDefault();
-        }
-        const maxForm = document.getElementById('id_' + form + '-MAX_NUM_FORMS').value
-        const totalForm = document.getElementById('id_' + form + '-TOTAL_FORMS')
-        const formcopy = document.getElementById(form + '_empty_form').cloneNode(true)
-        const currentForm = document.getElementsByClassName(form)
-        const currentCount = totalForm.value
-        console.log(currentCount)
-        formcopy.classList.add(form);
-        formcopy.classList.remove('hidden');
-        formcopy.setAttribute('id', form + '_form_' + currentCount)
-        formcopy.innerHTML = formcopy.innerHTML.replace(/__prefix__/g, currentCount)
-        totalForm.setAttribute('value', parseInt(currentCount) + 1)
-        const target = document.getElementById(form)
-        target.append(formcopy)
-        if (totalForm.value == maxForm) {
-            const btn = document.getElementById('add_' + form)
-            btn.classList.add('disabled')
-        }
-    };
-    
-</script>
-{% endblock bodyend %}

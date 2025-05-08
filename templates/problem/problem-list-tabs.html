@@ -2,7 +2,7 @@
 
 {% block tabs %}
     {% if perms.judge.add_problem %}
-        {{ make_tab('add', 'fa-plus-circle', url('problem_new'), _('Create')) }}
+        {{ make_tab('add', 'fa-plus-circle', url('problem_create'), _('Create')) }}
     {% endif %}
     {% if perms.judge.edit_all_problem or perms.judge.edit_public_problem or perms.judge.edit_own_problem %}
         {{ make_tab('list', 'fa-list', url('problem_list'), _('List')) }}

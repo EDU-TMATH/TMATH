@@ -11,7 +11,6 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import (LoginRequiredMixin,
                                         PermissionRequiredMixin)
-from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import transaction
 from django.db.models import F, Prefetch, Q
@@ -771,141 +770,18 @@ class ProblemClone(ProblemMixin, PermissionRequiredMixin, TitleMixin, SingleObje
         return HttpResponseRedirect(reverse('admin:judge_problem_change', args=(problem.pk,)))
 
 
-class ProblemNew(ProblemMixin, PermissionRequiredMixin, TitleMixin, CreateView):
+class ProblemCreate(ProblemMixin, PermissionRequiredMixin, TitleMixin, CreateView):
     title = _('Create Problem')
     template_name = 'problem/create.html'
     form_class = ProblemCreateForm
     permission_required = 'judge.add_problem'
 
-    def get(self, request, *args, **kwargs):
-        languagelimitform = LanguageInlineFormset()
-        # solutionform = SolutionInlineFormset()
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        return self.render_to_response(
-            self.get_context_data(
-                form=form,
-                languagelimitform=languagelimitform,
-                # solutionform=solutionform,
-            ),
-        )
 
-    def post(self, request, *args, **kwargs):
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        languagelimitform = LanguageInlineFormset(self.request.POST)
-        # solutionform = SolutionInlineFormset(self.request.POST)
-        if form.is_valid() and languagelimitform.is_valid():
-            return self.form_valid(form, languagelimitform)
-        else:
-            return self.form_invalid(form, languagelimitform)
-
-    def form_valid(self, form, languagelimitform):
-        # print(form.cleaned_data['authors'])
-        self.object = form.save()
-
-        language_limits = languagelimitform.save(commit=False)
-        for language in language_limits:
-            language.problem = self.object
-            language.save()
-
-        # solution = solutionform.save(commit=False)
-        # for sol in solution:
-        #     sol.problem = self.object
-        #     sol.save()
-
-        return HttpResponseRedirect(self.get_success_url())
-
-    def form_invalid(self, form, languagelimitform):
-        return self.render_to_response(
-            self.get_context_data(
-                form=form,
-                languagelimitform=languagelimitform,
-                # solutionform=solutionform
-            ),
-        )
-
-    def dispatch(self, request, *args, **kwargs):
-        if not self.has_permission():
-            return self.handle_no_permission()
-        self.object = None
-        if request.method == 'POST':
-            return self.post(request, *args, **kwargs)
-        elif request.method == 'GET':
-            return self.get(request, *args, **kwargs)
-        return super().dispatch(request, *args, **kwargs)
-
-
-class ProblemEdit(ProblemMixin, PermissionRequiredMixin, TitleMixin, UpdateView):
+class ProblemUpdate(ProblemMixin, PermissionRequiredMixin, TitleMixin, UpdateView):
     title = _('Update Problem')
     template_name = 'problem/create.html'
     form_class = ProblemUpdateForm
     permission_required = 'judge.edit_problem'
-
-    def get(self, request, *args, **kwargs):
-        languagelimitform = LanguageInlineFormset(instance=self.object)
-        # solutionform = SolutionInlineFormset(instance=self.object)
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        return self.render_to_response(
-            self.get_context_data(
-                form=form,
-                languagelimitform=languagelimitform,
-                # solutionform=solutionform,
-            ),
-        )
-
-    def post(self, request, *args, **kwargs):
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        languagelimitform = LanguageInlineFormset(self.request.POST, instance=self.object)
-        # solutionform = SolutionInlineFormset(self.request.POST, instance=self.object)
-        if form.is_valid() and languagelimitform.is_valid():  # and solutionform.is_valid():
-            return self.form_valid(form, languagelimitform)
-        else:
-            return self.form_invalid(form, languagelimitform)
-
-    def form_valid(self, form, languagelimitform):
-        self.object = form.save()
-        language_limits = languagelimitform.save(commit=False)
-
-        for language in language_limits:
-            language.problem_id = self.object.id
-            language.save()
-
-        for language in languagelimitform.deleted_objects:
-            language.delete()
-
-        # solution = solutionform.save(commit=False)
-
-        # for sol in solution:
-        #     sol.problem_id = self.object.id
-        #     sol.save()
-
-        # for sol in solutionform.deleted_objects:
-        #     sol.delete()
-
-        return HttpResponseRedirect(self.get_success_url())
-
-    def form_invalid(self, form, languagelimitform):
-        # print(languagelimitform.errors)
-        return self.render_to_response(
-            self.get_context_data(
-                form=form,
-                languagelimitform=languagelimitform,
-                # solutionform=solutionform
-            ),
-        )
-
-    def dispatch(self, request, *args, **kwargs):
-        if not self.has_permission():
-            return self.handle_no_permission()
-        self.object = self.get_object()
-        if request.method == 'POST':
-            return self.post(request, *args, **kwargs)
-        elif request.method == 'GET':
-            return self.get(request, *args, **kwargs)
-        return super().dispatch(request, *args, **kwargs)
 
 
 class PublicSolutionCreateView(TitleMixin, LoginRequiredMixin, CreateView):
@@ -1068,60 +944,3 @@ def upvote_solution(request):
 
 def downvote_solution(request):
     return vote_solution(request, -1)
-
-
-def getScratch(request):
-    problems = Problem.objects.filter(pk__gt=2799, pk__lt=3000)
-    data = serializers.serialize('json', problems)
-    struct = json.loads(data)
-    cases_py = []
-    test_py = []
-    for i, e in enumerate(struct, start=2476):
-        del e['fields']['user_count']
-        del e['fields']['ac_rate']
-        del e['fields']['public_description']
-        test_data = ProblemData.objects.filter(problem_id=e['pk'])
-        test_cases = ProblemTestCase.objects.filter(dataset_id=e['pk'])
-        cases = serializers.serialize('json', test_cases)
-        test = serializers.serialize('json', test_data)
-        tmp_test = json.loads(test)
-        tmp_case = json.loads(cases)
-        e['fields']['is_organization_private'] = False
-        e['fields']['organizations'] = []
-        e['fields']['allowed_languages'] = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        e['fields']['authors'] = [2]
-        e['fields']['points'] = 100
-        # e['fields']['classes'] = 4
-        # e['fields']['group'] = 7
-        # e['fields']['types'] = [23]
-        e['fields']['is_public'] = True
-        e['pk'] = i
-        for test in tmp_test:
-            test['fields']['problem'] = i
-        for case in tmp_case:
-            case['fields']['dataset'] = i
-        cases_py += tmp_case
-        test_py += tmp_test
-        e['fields']['time_limit'] = 1
-        e['fields']['license'] = None
-    struct += cases_py + test_py
-    data = json.dumps(struct, ensure_ascii=False)
-    return HttpResponse(data, content_type="text/json;charset=UTF-8")
-
-    # import codecs
-    # response = HttpResponse()
-    # response['Content-Type'] = 'text/csv'
-    # response['Content-Disposition'] = 'inline; filename=email.csv'
-    # # response.write(codecs.BOM_UTF8)
-    # import csv
-    # writer = csv.writer(response)
-    # first_row = ['Email']
-    # writer.writerow(first_row)
-    # users = User.objects.all().exclude(email=None)[:1000]
-    # index = 0
-    # for user in users:
-    #     index += 1
-    #     row = [user.email]
-    #     writer.writerow(row)
-
-    # return response
