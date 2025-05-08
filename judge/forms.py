@@ -4,6 +4,7 @@ from operator import attrgetter, itemgetter
 
 import pyotp
 import webauthn
+from dal import autocomplete
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm
@@ -28,9 +29,7 @@ from judge.models.problem_data import PublicSolution
 from judge.utils.subscription import newsletter_id
 from judge.widgets import (HeavyPreviewPageDownWidget, MartorWidget,
                            Select2MultipleWidget, Select2Widget)
-from judge.widgets.select2 import (HeavySelect2MultipleWidget,
-                                   SemanticCheckboxSelectMultiple,
-                                   SemanticSelect, SemanticSelectMultiple)
+from judge.widgets.select2 import SemanticSelectMultiple
 
 TOTP_CODE_LENGTH = 6
 
@@ -391,6 +390,7 @@ class ProblemUpdateForm(ModelForm):
                   'time_limit', 'memory_limit', 'points', 'partial', 'allowed_languages']
         widgets = {
             'description': forms.Textarea(attrs={'data-preview-url': reverse_lazy('problem_preview')}),
+            'authors': autocomplete.ModelSelect2Multiple(url="problem_author_select2_ajax"),
         }
 
 

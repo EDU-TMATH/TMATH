@@ -164,6 +164,8 @@ GRAPPELLI_INDEX_DASHBOARD = "dashboard.TmathDashboard"
 
 INSTALLED_APPS = (
     "django.contrib.contenttypes",
+    "dal",
+    "dal_select2",
     "grappelli.dashboard",
     "grappelli",
     "django.contrib.admin",

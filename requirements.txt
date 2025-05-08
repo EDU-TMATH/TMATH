@@ -1,4 +1,5 @@
 Django>4,<4.3
+django-autocomplete-light
 django_compressor
 django-mptt
 django-pagedown<2
