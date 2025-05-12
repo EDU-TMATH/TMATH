@@ -456,7 +456,7 @@ def contestLeave(request, contest):
     else:
         return generic_message(request, _('Contest is forbidden to leave'),
                                _('You are not allowed to leave contest "%s" at this time.') % contest, 403)
-    return HttpResponseRedirect(reverse('contest_view', args=(contest,)))
+    return HttpResponseRedirect(reverse('contest_view', args=(contest.key,)))
 
 
 class ContestLeave(LoginRequiredMixin, ContestMixin, DetailView):
