@@ -177,6 +177,7 @@ class Contest(models.Model):
     fastio = models.BooleanField(_("Fast IO"), default=False)
     forbidden_words = models.TextField(_("forbidden words"), blank=True,
                                        help_text=_("Words that are forbidden in the source code."))
+    forbidden_leave = models.BooleanField(_("forbidden leave"), default=False)
 
     @property
     def markdown_style(self):

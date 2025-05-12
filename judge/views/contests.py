@@ -450,7 +450,12 @@ def contestLeave(request, contest):
         return generic_message(request, _('No such contest'),
                                _('You are not in contest "%s".') % contest, 404)
 
-    profile.remove_contest()
+    contest = Contest.objects.get(key=contest)
+    if not contest.forbidden_leave:
+        profile.remove_contest()
+    else:
+        return generic_message(request, _('Contest is forbidden to leave'),
+                               _('You are not allowed to leave contest "%s" at this time.') % contest, 403)
     return HttpResponseRedirect(reverse('contest_view', args=(contest,)))
 
 
@@ -1106,3 +1111,11 @@ def exportExcel(request, contest):
         df.to_excel(writer, sheet_name='Sheet1', index=False)
 
     return response
+
+
+class ContestManageView(ContestMixin, TitleMixin, DetailView):
+    template_name = 'contest/manage.html'
+    tab = 'manage'
+
+    def get_title(self):
+        return _('Contest Management')

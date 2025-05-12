@@ -143,7 +143,7 @@ class ContestAdmin(NoBatchDeleteMixin, VersionAdmin):
         (_('Settings'), {
             'fields': ('is_visible', 'is_public_contest', 'use_clarifications', 'hide_problem_tags',
                        'hide_problem_authors', 'run_pretests_only', 'locked_after', 'scoreboard_visibility',
-                       'points_precision', 'add_solution', 'limit_solution', 'forbidden_words'),
+                       'points_precision', 'add_solution', 'limit_solution', 'forbidden_words', 'forbidden_leave'),
         }),
         (_('Scheduling'), {'fields': ('start_time', 'end_time', 'time_limit', 'pre_time')}),
         (_('Details'), {
