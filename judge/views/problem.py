@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import shutil
@@ -32,16 +31,15 @@ from django.views.generic.detail import SingleObjectMixin
 from reversion import revisions
 
 from judge.comments import CommentedDetailView
-from judge.forms import (CreatePublicSolutionForm, LanguageInlineFormset,
-                         ProblemCloneForm, ProblemCreateForm,
-                         ProblemSubmitForm, ProblemUpdateForm)
+from judge.forms import (CreatePublicSolutionForm, ProblemCloneForm,
+                         ProblemCreateForm, ProblemSubmitForm,
+                         ProblemUpdateForm)
 from judge.models import (ContestSubmission, Judge, Language, Problem,
                           ProblemGroup, ProblemTranslation, ProblemType,
                           Profile, RuntimeVersion, Solution, Submission,
                           SubmissionSource)
 from judge.models.contest import Contest
-from judge.models.problem_data import (ProblemData, ProblemTestCase,
-                                       PublicSolution, SolutionVote)
+from judge.models.problem_data import PublicSolution, SolutionVote
 from judge.pdf_problems import HAS_PDF, DefaultPdfMaker
 from judge.utils.diggpaginator import DiggPaginator
 from judge.utils.opengraph import generate_opengraph

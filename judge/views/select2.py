@@ -37,7 +37,7 @@ class Select2View(BaseListView):
                     for obj in context["object_list"]
                 ],
                 "more": context["page_obj"].has_next(),
-            }
+            },
         )
 
     def get_name(self, obj):
@@ -73,7 +73,7 @@ class ProblemSelect2View(Select2View):
 class ContestSelect2View(Select2View):
     def get_queryset(self):
         return Contest.get_visible_contests(self.request.user).filter(
-            Q(key__icontains=self.term) | Q(name__icontains=self.term)
+            Q(key__icontains=self.term) | Q(name__icontains=self.term),
         )
 
 
@@ -96,7 +96,7 @@ class UserSearchSelect2View(BaseListView):
         self.gravatar_default = request.GET.get("gravatar_default", None)
 
         self.object_list = self.get_queryset().values_list(
-            "pk", "user__username", "user__email", "display_rank"
+            "pk", "user__username", "user__email", "display_rank",
         )
 
         context = self.get_context_data()
@@ -108,14 +108,14 @@ class UserSearchSelect2View(BaseListView):
                         "text": username,
                         "id": username,
                         "gravatar_url": gravatar(
-                            email, self.gravatar_size, self.gravatar_default
+                            email, self.gravatar_size, self.gravatar_default,
                         ),
                         "display_rank": display_rank,
                     }
                     for pk, username, email, display_rank in context["object_list"]
                 ],
                 "more": context["page_obj"].has_next(),
-            }
+            },
         )
 
     def get_name(self, obj):
@@ -126,26 +126,26 @@ class ContestUserSearchSelect2View(UserSearchSelect2View):
     def get_queryset(self):
         contest = get_object_or_404(Contest, key=self.kwargs["contest"])
         if not contest.is_accessible_by(
-            self.request.user
+            self.request.user,
         ) or not contest.can_see_full_scoreboard(self.request.user):
             raise Http404()
 
         return Profile.objects.filter(
-            contest_history__contest=contest, user__username__icontains=self.term
+            contest_history__contest=contest, user__username__icontains=self.term,
         ).distinct()
 
 
 class TicketUserSelect2View(UserSearchSelect2View):
     def get_queryset(self):
         return Profile.objects.filter(
-            tickets__isnull=False, user__username__icontains=self.term
+            tickets__isnull=False, user__username__icontains=self.term,
         ).distinct()
 
 
 class AssigneeSelect2View(UserSearchSelect2View):
     def get_queryset(self):
         return Profile.objects.filter(
-            assigned_tickets__isnull=False, user__username__icontains=self.term
+            assigned_tickets__isnull=False, user__username__icontains=self.term,
         ).distinct()
 
 
